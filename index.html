@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0f14">
+<title>楚门</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b0f14;color:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC",sans-serif}
+header{padding:calc(18px + env(safe-area-inset-top)) 18px 14px;position:sticky;top:0;background:#0b0f14ee;backdrop-filter:blur(15px);z-index:5;border-bottom:1px solid #202733}
+h1{margin:0;font-size:28px} .sub{color:#8d99a8;font-size:13px;margin-top:4px}
+main{padding:14px 14px calc(28px + env(safe-area-inset-bottom));max-width:720px;margin:auto}
+.card{background:#121821;border:1px solid #222b37;border-radius:18px;padding:16px;margin-bottom:12px}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.symbol{font-size:21px;font-weight:700}.name{color:#8d99a8;font-size:13px}
+.price{font-size:28px;font-weight:750;margin-top:9px}.up{color:#35d07f}.down{color:#ff6673}.muted{color:#8d99a8}
+.badge{padding:7px 10px;border-radius:999px;font-size:13px;font-weight:700;background:#27303c}
+.long{background:#153c2a;color:#5ee89b}.short{background:#4a2028;color:#ff8290}.wait{background:#30343a;color:#c4ccd5}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.metric{background:#0d131b;border-radius:12px;padding:10px}.metric b{display:block;font-size:16px;margin-top:4px}.metric span{font-size:11px;color:#7f8a99}
+.bar{height:8px;background:#27303a;border-radius:99px;overflow:hidden;margin-top:12px}.fill{height:100%;width:0;background:#e7edf5;border-radius:99px}
+.small{font-size:12px;color:#7f8a99;line-height:1.5}.btn{width:100%;border:0;border-radius:13px;padding:13px;background:#e9eef5;color:#10151c;font-size:15px;font-weight:700;margin-top:8px}
+.notice{font-size:12px;color:#aab4c1;line-height:1.55}.danger{color:#ff9ba5}
+</style>
+</head>
+<body>
+<header><h1>楚门</h1><div class="sub">期货实时监控 · iPhone V1.0 · 模拟模式</div></header>
+<main id="app"></main>
+<script>
+const data=[
+ {s:"FG2701",n:"玻璃",p:1028,c:0.84,v:18620,oi:412830,score:78,dir:"做多",entry:"1022–1030",stop:"1010",t1:"1045",t2:"1060"},
+ {s:"RM2611",n:"菜粕",p:2916,c:-0.31,v:15340,oi:638210,score:61,dir:"观望",entry:"2908–2920",stop:"2888",t1:"2945",t2:"2970"}
+];
+function card(x){
+ const cls=x.dir==="做多"?"long":x.dir==="做空"?"short":"wait";
+ return `<section class="card">
+ <div class="row"><div><div class="symbol">${x.s}</div><div class="name">${x.n}</div></div><span class="badge ${cls}">${x.dir}</span></div>
+ <div class="price ${x.c>=0?"up":"down"}">${x.p.toLocaleString()} <small>${x.c>=0?"▲":"▼"} ${Math.abs(x.c).toFixed(2)}%</small></div>
+ <div class="grid"><div class="metric"><span>成交量</span><b>${x.v.toLocaleString()}</b></div><div class="metric"><span>持仓量</span><b>${x.oi.toLocaleString()}</b></div><div class="metric"><span>信号评分</span><b>${x.score}</b></div></div>
+ <div class="bar"><div class="fill" style="width:${x.score}%"></div></div>
+ <div class="grid"><div class="metric"><span>入场区间</span><b>${x.entry}</b></div><div class="metric"><span>止损</span><b>${x.stop}</b></div><div class="metric"><span>目标</span><b>${x.t1}/${x.t2}</b></div></div>
+ </section>`
+}
+function render(){document.getElementById("app").innerHTML=data.map(card).join("")+
+`<section class="card"><div class="symbol">系统状态</div><p class="notice">当前为<strong>模拟行情</strong>。这版可以直接在 iPhone Safari 打开，后续接入真实 CTP 行情后，楚门才能进行实时行情计算。</p><button class="btn" onclick="alert('V1.0：实时数据接口将在下一版接入。')">检查行情连接</button><p class="small">刷新周期：15 秒（演示） · 自动下单：关闭</p></section>`}
+render();
+</script>
+</body>
+</html>
