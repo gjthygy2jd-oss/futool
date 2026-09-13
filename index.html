@@ -1,745 +1,383 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#080c12">
-<title>楚门1.0 · 期货盯盘</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#080c12">
+<title>楚门1.0 · 期货盯盘系统</title>
+<!-- 引入ECharts 用于K线绘图 -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <style>
-*{box-sizing:border-box}
+*{box-sizing:border-box;margin:0;padding:0}
 body{
-margin:0;background:#080c12;color:#edf2f7;
-font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",
-"Microsoft YaHei",Arial,sans-serif
+  margin:0;
+  background:#080c12;
+  color:#edf2f7;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Arial,sans-serif;
+  padding:12px;
 }
-.app{max-width:720px;margin:auto;padding:12px}
+.container{max-width:760px;margin:0 auto;}
 .card{
-background:#111822;border:1px solid #263242;
-border-radius:16px;padding:14px;margin-bottom:12px
+  background:#111822;
+  border:1px solid #263242;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:14px;
 }
-.header{padding:17px}
-.title{font-size:25px;font-weight:800}
-.sub{font-size:12px;color:#8794a6;margin-top:5px}
-.status{font-size:13px;color:#54df91;margin-top:10px}
-h2{font-size:16px;margin:0 0 12px}
-select{
-width:100%;height:44px;border-radius:10px;
-background:#0b1119;color:#fff;
-border:1px solid #303d4d;padding:0 12px;font-size:15px
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
-.grid{
-display:grid;grid-template-columns:1fr 1fr;gap:8px
+.title{font-size:24px;font-weight:700}
+.sub-title{font-size:12px;color:#8794a6;margin-top:4px}
+.status-online{color:#54df91;font-size:13px}
+.status-offline{color:#ff626d;font-size:13px}
+
+/* 品种选择栏 */
+.select-row{
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
 }
-.item{
-background:#0b1119;border-radius:10px;padding:10px
+.select-row select{
+  flex:1;
+  height:44px;
+  border-radius:10px;
+  background:#0b1119;
+  color:#fff;
+  border:1px solid #303d4d;
+  padding:0 12px;
+  font-size:15px;
 }
-.label{font-size:12px;color:#8491a2}
-.value{font-size:18px;font-weight:700;margin-top:4px}
-.price{font-size:32px}
+
+/* K线画布容器 */
+#klineChart{
+  width:100%;
+  height:420px;
+}
+
+/* 行情网格面板 */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.data-item{
+  background:#0b1119;
+  border-radius:10px;
+  padding:12px;
+}
+.data-label{font-size:12px;color:#8491a2}
+.data-value{font-size:18px;font-weight:700;margin-top:4px}
+.price-big{font-size:30px;font-weight:bold}
 .up{color:#ff5865}
 .down{color:#42d17b}
-.neutral{color:#b9c2ce}
-.signal{
-text-align:center;font-size:25px;
-font-weight:900;padding:8px
-}
-.long{color:#ff5361}
-.short{color:#38d987}
-.wait{color:#aab4c2}
-.score{
-text-align:center;font-size:44px;font-weight:900
-}
-.small{
-font-size:12px;color:#8190a3;line-height:1.6
-}
-.center{text-align:center}
-.news{
-padding:10px 0;border-bottom:1px solid #263242
-}
-.news:last-child{border-bottom:0}
-.news-title{font-size:14px;line-height:1.5}
-.news-time{font-size:11px;color:#718094;margin-top:4px}
-.loading{text-align:center;color:#718094;padding:15px}
-.error{color:#ff626d}
-table{
-width:100%;border-collapse:collapse;font-size:12px
-}
-th,td{
-padding:8px 4px;border-bottom:1px solid #263242;
-text-align:center
-}
+.gray{color:#b9c2ce}
+
+/* 信号卡片 */
+.signal-card{text-align:center;padding:12px 0}
+.signal-long{color:#ff5361;font-size:28px;font-weight:bold}
+.signal-short{color:#38d987;font-size:28px;font-weight:bold}
+.signal-wait{color:#aab4c2;font-size:24px}
+.score-num{font-size:48px;font-weight:900;margin:8px 0}
+
+h2{font-size:17px;margin-bottom:12px;color:#cbd5e1}
+hr{border:0;border-top:1px solid #263242;margin:14px 0}
+.small-text{font-size:12px;color:#8190a3;line-height:1.6}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:9px 4px;border-bottom:1px solid #263242;text-align:center}
 th{color:#8190a3}
-.footer{
-text-align:center;color:#526071;font-size:11px;
-padding:8px 0 20px
-}
-hr{
-border:0;border-top:1px solid #263242;margin:12px 0
-}
+.footer{text-align:center;color:#526071;font-size:11px;padding:10px 0 20px}
 </style>
 </head>
-
 <body>
-<div class="app">
+<div class="container">
+  <!-- 头部标题 -->
+  <div class="card header">
+    <div>
+      <div class="title">楚门 · 期货盯盘 楚门1.0</div>
+      <div class="sub-title">X战法 + 楚门综合信号</div>
+    </div>
+    <div id="connectStatus" class="status-offline">连接断开</div>
+  </div>
 
-<div class="card header">
-<div class="title">楚门 · 期货盯盘</div>
-<div class="sub">楚门1.0 · X战法 + 楚门综合信号</div>
-<div id="status" class="status">正在连接真实数据……</div>
-</div>
+  <!-- 品种下拉选择 -->
+  <div class="card">
+    <div class="select-row">
+      <select id="symbolSelect">
+        <option value="RM0">菜粕 RM0</option>
+        <option value="M0">豆粕 M0</option>
+        <option value="FG0">玻璃 FG0</option>
+        <option value="SA0">纯碱 SA0</option>
+        <option value="SH0">烧碱 SH0</option>
+        <option value="MA0">甲醇 MA0</option>
+      </select>
+      <select id="periodSelect">
+        <option value="1min">1分钟</option>
+        <option value="10min" selected>10分钟</option>
+        <option value="60min">60分钟</option>
+        <option value="day">日线</option>
+      </select>
+    </div>
+  </div>
 
-<div class="card">
-<h2>选择品种</h2>
-<select id="symbol">
-<option value="RM0">菜粕</option>
-<option value="M0">豆粕</option>
-<option value="FG0">玻璃</option>
-<option value="SA0">纯碱</option>
-<option value="SH0">烧碱</option>
-<option value="MA0">甲醇</option>
-</select>
-</div>
+  <!-- K线图区域（核心！带买卖标记） -->
+  <div class="card">
+    <h2>K线图 + MA5白线 + MA60紫线 | 买卖信号标记</h2>
+    <div id="klineChart"></div>
+  </div>
 
-<div class="card">
-<h2>当前信号 · <span id="product1">菜粕</span></h2>
+  <!-- 当前信号面板 -->
+  <div class="card">
+    <h2>当前信号 · <span id="prodName">菜粕</span></h2>
+    <div class="signal-card">
+      <div id="signalText" class="signal-wait">等待真实信号</div>
+      <div id="scoreText" class="score-num">--</div>
+      <div class="small-text">综合评分 / 100</div>
+    </div>
+    <hr>
+    <div class="grid-4">
+      <div class="data-item"><div class="data-label">入场价格</div><div id="entryPrice" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">趋势方向</div><div id="trendText" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">紫线 MA60</div><div id="ma60Val" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">白线 MA5</div><div id="ma5Val" class="data-value">--</div></div>
+    </div>
+    <p class="small-text" style="margin-top:10px" id="signalReason">等待行情数据加载</p>
+  </div>
 
-<div id="signal" class="signal wait">
-等待真实信号
-</div>
+  <!-- 实时行情面板 -->
+  <div class="card">
+    <h2>实时行情 · <span id="prodQuote">菜粕</span></h2>
+    <div class="grid-4">
+      <div class="data-item"><div class="data-label">最新价</div><div id="lastPrice" class="data-value price-big gray">--</div></div>
+      <div class="data-item"><div class="data-label">涨跌</div><div id="changeVal" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">开盘</div><div id="openVal" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">最高</div><div id="highVal" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">最低</div><div id="lowVal" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">成交量</div><div id="volVal" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">持仓量</div><div id="oiVal" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">前结算</div><div id="settleVal" class="data-value">--</div></div>
+    </div>
+  </div>
 
-<div id="score" class="score">--</div>
-<div class="small center">综合评分 / 100</div>
+  <!-- 交易条件状态 -->
+  <div class="card">
+    <h2>严格买卖条件</h2>
+    <div class="grid-4">
+      <div class="data-item"><div class="data-label">10分钟趋势</div><div id="condTrend" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">白紫交叉</div><div id="condCross" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">X战法状态</div><div id="condX" class="data-value">--</div></div>
+      <div class="data-item"><div class="data-label">评分门槛≥75</div><div id="condScore" class="data-value">--</div></div>
+    </div>
+    <p class="small-text" style="margin-top:10px">一天只做一个方向 · 不追高 · 固定本金 · 止损5~10点 · 22:55停止新开仓，23:00前清仓</p>
+  </div>
 
-<hr>
+  <!-- 历史信号表格 -->
+  <div class="card">
+    <h2>历史信号记录</h2>
+    <div id="historyBox">
+      <div class="small-text">正在读取历史信号...</div>
+    </div>
+  </div>
 
-<div class="grid">
+  <!-- 交易规则 -->
+  <div class="card">
+    <h2>楚门1.0运行规则</h2>
+    <div class="small-text">
+① 10分钟线判断方向<br>
+② 紫线=日线MA60；白线=1分钟MA5<br>
+③ 紫线上只做多，紫线下只做空<br>
+④ 白紫新鲜交叉才允许开仓<br>
+⑤ X战法：放量突破、缩量回踩、不破前高/前低<br>
+⑥ 综合评分≥75方可入场；禁止追高<br>
+⑦ 单日亏损达到总资金2%，停止新开仓<br>
+⑧ 21:00~23:00允许交易，22:55停止开仓，23:00强制清仓<br>
+⑨ 仅人工参考信号，不会自动下单
+    </div>
+  </div>
 
-<div class="item">
-<div class="label">入场价格</div>
-<div id="entry" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">趋势</div>
-<div id="trend" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">紫线（日MA60）</div>
-<div id="purple" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">白线（1分钟MA5）</div>
-<div id="white" class="value">--</div>
-</div>
-
-</div>
-
-<p id="reason" class="small">等待真实信号……</p>
-</div>
-
-<div class="card">
-<h2>实时行情 · <span id="product2">菜粕</span></h2>
-
-<div class="grid">
-
-<div class="item">
-<div class="label">最新价</div>
-<div id="price" class="value price">--</div>
-</div>
-
-<div class="item">
-<div class="label">涨跌</div>
-<div id="change" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">开盘</div>
-<div id="open" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">最高</div>
-<div id="high" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">最低</div>
-<div id="low" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">成交量</div>
-<div id="volume" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">持仓量</div>
-<div id="oi" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">前结算</div>
-<div id="prev" class="value">--</div>
-</div>
-
-</div>
-
-<div id="quoteTime" class="small" style="margin-top:8px">
-等待行情……
-</div>
-</div>
-
-<div class="card">
-<h2>严格买卖条件</h2>
-
-<div class="grid">
-
-<div class="item">
-<div class="label">10分钟趋势</div>
-<div id="ruleTrend" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">白紫交叉</div>
-<div id="ruleCross" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">X战法</div>
-<div id="ruleX" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">追高过滤</div>
-<div id="ruleChase" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">日内方向</div>
-<div id="ruleDay" class="value">--</div>
-</div>
-
-<div class="item">
-<div class="label">评分门槛</div>
-<div class="value">≥75</div>
-</div>
-
-</div>
-
-<p class="small">
-一天只做一个方向 · 不追高 · 每次相同本金 ·
-止损5～10点 · 22:55停止新开仓 · 23:00前清仓
-</p>
-</div>
-
-<div class="card">
-<h2>实时新闻 · 东方财富7×24</h2>
-<div id="news">
-<div class="loading">正在获取真实新闻……</div>
-</div>
-</div>
-
-<div class="card">
-<h2>历史信号 · <span id="product3">菜粕</span></h2>
-<div id="history">
-<div class="loading">正在读取历史信号……</div>
-</div>
-</div>
-
-<div class="card">
-<h2>楚门1.0运行规则</h2>
-
-<div class="small">
-① 10分钟线判断方向<br>
-② 紫线＝真实日线MA60<br>
-③ 紫线上只做多，紫线下只做空<br>
-④ 白线＝1分钟MA5<br>
-⑤ 白紫新鲜交叉才允许开仓<br>
-⑥ X战法：放量突破、缩量回踩、不破前高/前低<br>
-⑦ 综合评分必须≥75<br>
-⑧ 不追高<br>
-⑨ 一天只做一个方向<br>
-⑩ 单日亏损达到总资金2%停止新开仓<br>
-⑪ 21:00～23:00允许交易<br>
-⑫ 22:55停止新开仓<br>
-⑬ 23:00前必须平仓<br>
-⑭ 不自动下单，只提供人工交易信号
-</div>
-</div>
-
-<div class="footer">
-楚门1.0 · Cloudflare Worker + D1<br>
-新浪免费期货数据 · 东方财富7×24
-</div>
-
+  <div class="footer">楚门1.0 · Cloudflare Worker + D1 | 期货数据仅供参考，不构成投资建议，期货高杠杆风险极大</div>
 </div>
 
 <script>
-
-const API=
-"https://throbbing-wildflower-7638.rzkbytrh52.workers.dev";
-
-const names={
-RM0:"菜粕",
-M0:"豆粕",
-FG0:"玻璃",
-SA0:"纯碱",
-SH0:"烧碱",
-MA0:"甲醇"
+// ========== 后端API地址（替换成你的worker域名） ==========
+const API_BASE = "https://throbbing-wildflower-7638.rzkbytrh52.workers.dev";
+const symbolMap = {
+  RM0:"菜粕",M0:"豆粕",FG0:"玻璃",SA0:"纯碱",SH0:"烧碱",MA0:"甲醇"
 };
+let currentSymbol = "RM0";
+let currentPeriod = "10min";
+let chartDom = document.getElementById('klineChart');
+let myChart = echarts.init(chartDom, 'dark');
+let klineData = [];
+let markPoints = []; // 买卖点标记数组
 
-let current="RM0";
+// ECharts K线基础配置
+function renderChart(){
+  const option = {
+    tooltip:{trigger:'axis',axisPointer:{type:'cross'}},
+    legend:{data:['K线','MA5','MA60'],top:0,textStyle:{color:"#cbd5e1"}},
+    grid:{left:40,right:10,top:40,bottom:60},
+    xAxis:{type:'category',data:klineData.map(item=>item[0]),axisLine:{lineStyle:{color:'#444'}},axisLabel:{show:false}},
+    yAxis:{scale:true,axisLine:{lineStyle:{color:'#444'},splitLine:{lineStyle:{color:'#222'}}}},
+    series:[
+      {
+        name:'K线',
+        type:'candlestick',
+        data:klineData.map(item=>[item[1],item[2],item[3],item[4]]),
+        itemStyle:{color:'#ff5865',color0:'#42d17b',borderColor:'#ff5865',borderColor0:'#42d17b'},
+        markPoint:{
+          symbolSize:36,
+          data:markPoints
+        }
+      },
+      {
+        name:'MA5',type:'line',data:klineData.map(item=>item.ma5),
+        lineStyle:{color:"#ffffff",width:1.8},showSymbol:false
+      },
+      {
+        name:'MA60',type:'line',data:klineData.map(item=>item.ma60),
+        lineStyle:{color:"#b86bff",width:1.8},showSymbol:false
+      }
+    ]
+  };
+  myChart.setOption(option);
+}
+window.addEventListener('resize',()=>myChart.resize());
 
-function $(id){
-return document.getElementById(id);
+// 通用工具
+function $(id){return document.getElementById(id)}
+function fmt(v){if(v===undefined||v===null)return "--";const n=Number(v);return Number.isFinite(n)?n.toFixed(2):v;}
+
+// 接口请求
+async function fetchApi(path){
+  try{
+    const res = await fetch(API_BASE+path,{cache:"no-store"});
+    if(!res.ok) throw new Error("请求失败");
+    return await res.json();
+  }catch(err){
+    return {ok:false,error:err.message};
+  }
 }
 
-function fmt(v){
-if(v===undefined||v===null||v==="")return "--";
-const n=Number(v);
-return Number.isFinite(n)?n.toFixed(2):String(v);
+// Ping 连通检测
+async function pingServer(){
+  const res = await fetchApi("/api/ping");
+  if(res.ok){
+    $("connectStatus").textContent="● 已连接";
+    $("connectStatus").className="status-online";
+  }else{
+    $("connectStatus").textContent="连接断开";
+    $("connectStatus").className="status-offline";
+  }
 }
 
-async function get(path){
-const r=await fetch(API+path,{
-cache:"no-store"
-});
-if(!r.ok)throw new Error("HTTP "+r.status);
-return await r.json();
+// 加载K线+均线+买卖标记
+async function loadKline(){
+  const res = await fetchApi(`/api/kline?symbol=${currentSymbol}&period=${currentPeriod}`);
+  if(res.ok && res.data){
+    klineData = res.data.kline;
+    markPoints = res.data.signPoints || [];
+    renderChart();
+  }
 }
 
-function escapeHtml(v){
-return String(v??"")
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
+// 加载行情
+async function loadQuote(){
+  const res = await fetchApi(`/api/quotes?symbol=${currentSymbol}`);
+  if(res.ok && res.data){
+    const q = res.data;
+    $("lastPrice").textContent = fmt(q.price);
+    $("changeVal").textContent = (q.change>0?"+":"")+fmt(q.change);
+    $("changeVal").className = "data-value "+(q.change>0?"up":q.change<0?"down":"gray");
+    $("openVal").textContent=fmt(q.open);
+    $("highVal").textContent=fmt(q.high);
+    $("lowVal").textContent=fmt(q.low);
+    $("volVal").textContent=fmt(q.volume);
+    $("oiVal").textContent=fmt(q.oi);
+    $("settleVal").textContent=fmt(q.settle);
+  }
 }
 
-async function ping(){
+// 加载信号
+async function loadSignal(){
+  const res = await fetchApi(`/api/signal?symbol=${currentSymbol}`);
+  if(res.ok && res.data){
+    const s = res.data;
+    $("scoreText").textContent = fmt(s.score);
+    $("entryPrice").textContent = fmt(s.entry);
+    $("trendText").textContent = s.trend;
+    $("ma5Val").textContent = fmt(s.ma5);
+    $("ma60Val").textContent = fmt(s.ma60);
+    $("signalReason").textContent = s.reason;
 
-try{
-
-const d=await get("/api/ping");
-
-if(d.ok){
-$("status").textContent=
-"● 真实数据已连接 · "+(d.dataSource||"新浪免费期货数据");
-}else{
-$("status").textContent="数据源不可用";
-$("status").className="status error";
+    if(s.direction === "long"){
+      $("signalText").textContent = "▲ 做多开仓信号";
+      $("signalText").className = "signal-long";
+    }else if(s.direction === "short"){
+      $("signalText").textContent = "▼ 做空开仓信号";
+      $("signalText").className = "signal-short";
+    }else{
+      $("signalText").textContent = "等待入场信号";
+      $("signalText").className = "signal-wait";
+    }
+    // 条件面板
+    $("condTrend").textContent = s.condTrend || "--";
+    $("condCross").textContent = s.condCross || "--";
+    $("condX").textContent = s.condX || "--";
+    $("condScore").textContent = s.score>=75?"满足":"不满足";
+  }
 }
 
-}catch(e){
-
-$("status").textContent="数据源不可用";
-$("status").className="status error";
-
+// 加载历史信号
+async function loadHistory(){
+  const res = await fetchApi(`/api/history?symbol=${currentSymbol}`);
+  if(res.ok && res.data?.length>0){
+    const html = `<table>
+    <tr><th>时间</th><th>方向</th><th>入场价</th><th>平仓价</th><th>评分</th><th>盈亏</th></tr>
+    ${res.data.map(item=>`
+      <tr>
+        <td>${item.time}</td>
+        <td>${item.dir}</td>
+        <td>${fmt(item.entry)}</td>
+        <td>${fmt(item.close)}</td>
+        <td>${fmt(item.score)}</td>
+        <td class="${item.pnl>0?'up':'down'}">${fmt(item.pnl)}</td>
+      </tr>`).join("")}
+    </table>`;
+    $("historyBox").innerHTML = html;
+  }else{
+    $("historyBox").innerHTML = `<div class="small-text">暂无历史信号记录</div>`;
+  }
 }
 
+// 切换品种事件
+$("symbolSelect").addEventListener("change",async function(){
+  currentSymbol = this.value;
+  $("prodName").textContent = symbolMap[currentSymbol];
+  $("prodQuote").textContent = symbolMap[currentSymbol];
+  await reloadAll();
+})
+// 切换周期事件
+$("periodSelect").addEventListener("change",async function(){
+  currentPeriod = this.value;
+  await loadKline();
+})
+
+async function reloadAll(){
+  await loadKline();
+  await loadQuote();
+  await loadSignal();
+  await loadHistory();
 }
 
-function renderQuote(d){
-
-let q=null;
-
-if(Array.isArray(d.data)){
-q=d.data.find(x=>
-x.symbol===current||
-x.code===current
-)||d.data[0];
-}else{
-q=d.data||d;
+// 页面初始化
+async function init(){
+  await pingServer();
+  await reloadAll();
+  setInterval(loadQuote,2000);
+  setInterval(loadSignal,5000);
+  setInterval(loadKline,10000);
+  setInterval(loadHistory,30000);
 }
-
-if(Array.isArray(q)){
-
-q={
-name:q[0],
-time:q[1],
-open:q[2],
-high:q[3],
-low:q[4],
-prevSettlement:q[10],
-price:q[8],
-volume:q[14],
-oi:q[13]
-};
-
-}
-
-if(!q||q.price===undefined){
-throw new Error("无行情");
-}
-
-const price=Number(q.price);
-const prev=Number(
-q.prevSettlement??q.prev??0
-);
-
-const change=price-prev;
-
-$("price").textContent=fmt(price);
-
-$("change").textContent=
-(change>0?"+":"")+fmt(change);
-
-$("change").className=
-"value "+
-(change>0?"up":change<0?"down":"neutral");
-
-$("open").textContent=fmt(q.open);
-$("high").textContent=fmt(q.high);
-$("low").textContent=fmt(q.low);
-$("volume").textContent=fmt(q.volume);
-$("oi").textContent=fmt(q.oi);
-$("prev").textContent=fmt(prev);
-
-$("quoteTime").textContent=
-"行情时间："+(q.time||"实时");
-
-}
-
-async function loadQuotes(){
-
-try{
-
-const d=await get("/api/quotes");
-
-if(!d.ok)throw new Error();
-
-renderQuote(d);
-
-}catch(e){
-
-$("price").textContent="数据源不可用";
-$("quoteTime").textContent="新浪行情暂不可用";
-
-}
-
-}
-
-function renderSignal(d){
-
-if(!d)return;
-
-const x=d.data||d.result||d;
-
-const score=
-x.score??d.score;
-
-const direction=
-x.direction??d.direction;
-
-const entry=
-x.entryPrice??
-x.entry_price??
-x.entry??
-d.entryPrice??
-d.entry;
-
-const trend=
-x.trend??d.trend;
-
-const purple=
-x.purple??
-x.purpleLine??
-d.purple;
-
-const white=
-x.white??
-x.whiteLine??
-d.white;
-
-$("score").textContent=
-score===undefined?"--":score;
-
-$("entry").textContent=
-entry===undefined?"--":fmt(entry);
-
-$("trend").textContent=
-trend||"--";
-
-$("purple").textContent=
-purple===undefined?"--":fmt(purple);
-
-$("white").textContent=
-white===undefined?"--":fmt(white);
-
-if(direction==="多"||
-direction==="LONG"||
-direction==="long"){
-
-$("signal").textContent="▲ 做多";
-$("signal").className="signal long";
-
-}else if(direction==="空"||
-direction==="SHORT"||
-direction==="short"){
-
-$("signal").textContent="▼ 做空";
-$("signal").className="signal short";
-
-}else{
-
-$("signal").textContent="等待信号";
-$("signal").className="signal wait";
-
-}
-
-$("reason").textContent=
-x.reason||
-d.reason||
-x.message||
-d.message||
-"严格条件未全部满足";
-
-const rules=x.rules||d.rules||{};
-
-$("ruleTrend").textContent=
-rules.trend??trend??"--";
-
-$("ruleCross").textContent=
-rules.cross??
-rules.crossover??
-"--";
-
-$("ruleX").textContent=
-rules.xPattern??
-rules.x??
-"--";
-
-$("ruleChase").textContent=
-rules.chase??"未追高";
-
-$("ruleDay").textContent=
-rules.dayDirection??"--";
-
-}
-
-async function loadSignal(){
-
-try{
-
-const d=await get(
-"/api/signal?symbol="+
-encodeURIComponent(current)
-);
-
-if(!d.ok)throw new Error();
-
-renderSignal(d);
-
-}catch(e){
-
-$("signal").textContent="数据源不可用";
-$("signal").className="signal wait";
-$("score").textContent="--";
-
-}
-
-}
-
-async function loadNews(){
-
-try{
-
-const d=await get("/api/news");
-
-const list=
-Array.isArray(d.data)?
-d.data:[];
-
-if(!list.length){
-
-$("news").innerHTML=
-'<div class="loading">暂无真实新闻</div>';
-
-return;
-
-}
-
-$("news").innerHTML=
-list.slice(0,10).map(x=>`
-
-<div class="news">
-
-<div class="news-title">
-${escapeHtml(
-x.title||x.summary||""
-)}
-</div>
-
-<div class="news-time">
-${escapeHtml(x.time||"")}
-${x.source?
-" · "+escapeHtml(x.source):""}
-</div>
-
-</div>
-
-`).join("");
-
-}catch(e){
-
-$("news").innerHTML=
-'<div class="error">数据源不可用</div>';
-
-}
-
-}
-
-async function loadHistory(){
-
-try{
-
-const d=await get(
-"/api/history?symbol="+
-encodeURIComponent(current)
-);
-
-const list=
-Array.isArray(d.data)?
-d.data:
-Array.isArray(d.history)?
-d.history:[];
-
-if(!list.length){
-
-$("history").innerHTML=
-'<div class="loading">暂无历史信号</div>';
-
-return;
-
-}
-
-$("history").innerHTML=`
-
-<table>
-
-<tr>
-<th>时间</th>
-<th>方向</th>
-<th>价格</th>
-<th>评分</th>
-<th>结果</th>
-</tr>
-
-${list.slice(0,30).map(x=>`
-
-<tr>
-
-<td>
-${escapeHtml(
-x.time||
-x.created_at||
-x.bar_time||
-"--"
-)}
-</td>
-
-<td>
-${escapeHtml(
-x.direction||"--"
-)}
-</td>
-
-<td>
-${fmt(
-x.price||
-x.entry_price
-)}
-</td>
-
-<td>
-${escapeHtml(
-String(x.score??"--")
-)}
-</td>
-
-<td>
-${escapeHtml(
-x.result||
-x.outcome||
-"--"
-)}
-</td>
-
-</tr>
-
-`).join("")}
-
-</table>
-`;
-
-}catch(e){
-
-$("history").innerHTML=
-'<div class="error">历史数据不可用</div>';
-
-}
-
-}
-
-$("symbol").addEventListener(
-"change",
-function(){
-
-current=this.value;
-
-$("product1").textContent=names[current];
-$("product2").textContent=names[current];
-$("product3").textContent=names[current];
-
-loadQuotes();
-loadSignal();
-loadHistory();
-
-}
-);
-
-async function init(){
-
-await ping();
-await loadQuotes();
-await loadSignal();
-await loadNews();
-await loadHistory();
-
-}
-
 init();
-
-/* 行情：2秒 */
-setInterval(
-loadQuotes,
-2000
-);
-
-/* 信号：5秒 */
-setInterval(
-loadSignal,
-5000
-);
-
-/* 新闻：5秒 */
-setInterval(
-loadNews,
-5000
-);
-
-/* 历史：30秒 */
-setInterval(
-loadHistory,
-30000
-);
-
 </script>
-
 </body>
 </html>
